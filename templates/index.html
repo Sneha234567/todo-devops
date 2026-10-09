@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>To-Do App</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    h1 { text-align: center; }
+    form.add { display: flex; gap: 8px; margin-bottom: 20px; }
+    form.add input { flex: 1; padding: 8px; }
+    button { padding: 8px 12px; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #ddd; }
+    li span { flex: 1; }
+    li.done span { text-decoration: line-through; color: #888; }
+    li form { margin: 0; }
+  </style>
+</head>
+<body>
+  <h1>My To-Do List</h1>
+  <form class="add" action="/add" method="post">
+    <input type="text" name="title" placeholder="Add a task..." required>
+    <button type="submit">Add</button>
+  </form>
+  <ul>
+    {% for t in tasks %}
+    <li class="{{ 'done' if t.done else '' }}">
+      <span>{{ t.title }}</span>
+      <form action="/done/{{ t.id }}" method="post"><button>{{ 'Undo' if t.done else 'Done' }}</button></form>
+      <form action="/delete/{{ t.id }}" method="post"><button>Delete</button></form>
+    </li>
+    {% else %}
+    <li>No tasks yet. Add one above!</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
