@@ -9,6 +9,7 @@ pipeline {
         DOCKER_USER = 'sneha234567'
         IMAGE       = "${DOCKER_USER}/todo-app"
         TAG         = "${env.BUILD_NUMBER}"
+        KUBECONFIG  = 'C:\\Users\\sneha\\.kube\\config'
     }
 
     stages {
