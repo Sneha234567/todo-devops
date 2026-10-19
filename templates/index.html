@@ -1,38 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="purple" data-mode="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>To-Do App</title>
+  <title>My To-Do List</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
-    h1 { text-align: center; }
-    form.add { display: flex; gap: 8px; margin-bottom: 20px; }
-    form.add input { flex: 1; padding: 8px; }
-    button { padding: 8px 12px; cursor: pointer; }
-    ul { list-style: none; padding: 0; }
-    li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #ddd; }
-    li span { flex: 1; }
-    li.done span { text-decoration: line-through; color: #888; }
-    li form { margin: 0; }
+    :root[data-theme="purple"] { --a1:#7c3aed; --a2:#ec4899; }
+    :root[data-theme="ocean"]  { --a1:#0ea5e9; --a2:#6366f1; }
+    :root[data-theme="sunset"] { --a1:#f97316; --a2:#ef4444; }
+    :root[data-theme="forest"] { --a1:#10b981; --a2:#65a30d; }
+    :root[data-mode="light"] { --card:#ffffff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb; --soft:#f3f4f6; }
+    :root[data-mode="dark"]  { --card:#1f2430; --text:#f3f4f6; --muted:#9ca3af; --border:#374151; --soft:#2a3040; }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 24px 12px 48px;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif; color: var(--text);
+      background: linear-gradient(135deg, var(--a1), var(--a2)) fixed;
+    }
+    .card { max-width: 760px; margin: 0 auto; background: var(--card); border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.25); overflow: hidden; }
+    header { padding: 24px 28px; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 1.8rem; }
+    .tools { display: flex; align-items: center; gap: 8px; }
+    .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; padding: 0; }
+    .dot.purple { background: linear-gradient(135deg,#7c3aed,#ec4899); }
+    .dot.ocean  { background: linear-gradient(135deg,#0ea5e9,#6366f1); }
+    .dot.sunset { background: linear-gradient(135deg,#f97316,#ef4444); }
+    .dot.forest { background: linear-gradient(135deg,#10b981,#65a30d); }
+    .mode { background: rgba(255,255,255,.25); color:#fff; border:0; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+    .stat { background: rgba(255,255,255,.2); border-radius: 12px; padding: 10px; text-align: center; }
+    .stat b { display: block; font-size: 1.4rem; }
+    .stat span { font-size: .75rem; opacity: .9; }
+    .bar { height: 10px; background: rgba(255,255,255,.3); border-radius: 999px; margin-top: 14px; overflow: hidden; }
+    .bar div { height: 100%; background: #fff; border-radius: 999px; width: {{ percent }}%; transition: width .4s; }
+
+    main { padding: 22px 28px 28px; }
+    .add { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; }
+    .add .row2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    input, select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+                    background: var(--card); color: var(--text); font-size: .95rem; }
+    input:focus, select:focus { outline: 2px solid var(--a1); border-color: transparent; }
+    .btn { border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; color: #fff;
+           background: linear-gradient(135deg, var(--a1), var(--a2)); }
+    .btn:hover { filter: brightness(1.08); }
+    .btn.ghost { background: var(--soft); color: var(--text); }
+    .btn.danger { background: #ef4444; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+    .tabs { display: flex; gap: 6px; }
+    .tab { padding: 6px 14px; border-radius: 999px; background: var(--soft); color: var(--text); text-decoration: none; font-size: .85rem; }
+    .tab.on { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; }
+    .filters form { display: flex; gap: 6px; flex: 1; min-width: 220px; flex-wrap: wrap; }
+    .filters input { flex: 1; min-width: 120px; }
+    .filters select { width: auto; }
+
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    li.task { border: 1px solid var(--border); border-left: 6px solid var(--muted); border-radius: 14px;
+              padding: 12px 14px; background: var(--card); }
+    li.task.p-high { border-left-color: #ef4444; }
+    li.task.p-medium { border-left-color: #f59e0b; }
+    li.task.p-low { border-left-color: #10b981; }
+    li.task.overdue { background: rgba(239,68,68,.08); }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--a1); background: transparent;
+             color: #fff; cursor: pointer; font-size: .9rem; flex-shrink: 0; }
+    li.done .check { background: linear-gradient(135deg, var(--a1), var(--a2)); border-color: transparent; }
+    .main { flex: 1; min-width: 0; }
+    .title { font-weight: 600; word-break: break-word; }
+    li.done .title { text-decoration: line-through; color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip { font-size: .72rem; padding: 2px 10px; border-radius: 999px; color: #fff; }
+    .cat-personal { background: #8b5cf6; } .cat-work { background: #3b82f6; } .cat-study { background: #f59e0b; }
+    .cat-health { background: #10b981; } .cat-other { background: #6b7280; }
+    .chip.pr-high { background: #ef4444; } .chip.pr-medium { background: #f59e0b; } .chip.pr-low { background: #10b981; }
+    .chip.due { background: var(--soft); color: var(--text); }
+    .chip.due.late { background: #ef4444; color: #fff; }
+    .icon { background: transparent; border: 0; cursor: pointer; font-size: 1.1rem; opacity: .7; }
+    .icon:hover { opacity: 1; }
+    form.inline { margin: 0; }
+    details { margin-top: 8px; }
+    summary { cursor: pointer; font-size: .8rem; color: var(--muted); }
+    .edit { display: grid; gap: 8px; margin-top: 8px; }
+    .edit .row2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .empty { text-align: center; color: var(--muted); padding: 30px 0; }
+    footer { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; color: var(--muted); font-size: .85rem; }
+    @media (max-width: 560px) {
+      .add .row2, .edit .row2 { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
+  <script>
+    try {
+      var r = document.documentElement;
+      r.dataset.theme = localStorage.getItem("theme") || "purple";
+      r.dataset.mode = localStorage.getItem("mode") ||
+        (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    } catch (e) {}
+    function setTheme(t) { document.documentElement.dataset.theme = t; try { localStorage.setItem("theme", t); } catch (e) {} }
+    function toggleMode() {
+      var r = document.documentElement, m = r.dataset.mode === "dark" ? "light" : "dark";
+      r.dataset.mode = m; try { localStorage.setItem("mode", m); } catch (e) {}
+    }
+  </script>
 </head>
 <body>
-  <h1>My To-Do List</h1>
-  <form class="add" action="/add" method="post">
-    <input type="text" name="title" placeholder="Add a task..." required>
-    <button type="submit">Add</button>
-  </form>
-  <ul>
-    {% for t in tasks %}
-    <li class="{{ 'done' if t.done else '' }}">
-      <span>{{ t.title }}</span>
-      <form action="/done/{{ t.id }}" method="post"><button>{{ 'Undo' if t.done else 'Done' }}</button></form>
-      <form action="/delete/{{ t.id }}" method="post"><button>Delete</button></form>
-    </li>
-    {% else %}
-    <li>No tasks yet. Add one above!</li>
-    {% endfor %}
-  </ul>
+  <div class="card">
+    <header>
+      <div class="top">
+        <h1>✅ My To-Do List</h1>
+        <div class="tools">
+          <button class="dot purple" onclick="setTheme('purple')" title="Purple"></button>
+          <button class="dot ocean" onclick="setTheme('ocean')" title="Ocean"></button>
+          <button class="dot sunset" onclick="setTheme('sunset')" title="Sunset"></button>
+          <button class="dot forest" onclick="setTheme('forest')" title="Forest"></button>
+          <button class="mode" onclick="toggleMode()">🌗 Mode</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>{{ total }}</b><span>Total</span></div>
+        <div class="stat"><b>{{ active }}</b><span>Pending</span></div>
+        <div class="stat"><b>{{ done }}</b><span>Done</span></div>
+        <div class="stat"><b>{{ overdue }}</b><span>Overdue</span></div>
+      </div>
+      <div class="bar" title="{{ percent }}% complete"><div></div></div>
+    </header>
+
+    <main>
+      <form class="add" action="/add" method="post">
+        <input type="text" name="title" placeholder="What needs to be done?" maxlength="200" required>
+        <div class="row2">
+          <select name="category">
+            {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+          </select>
+          <select name="priority">
+            {% for p in priorities %}<option value="{{ p }}" {{ 'selected' if p == 'Medium' }}>{{ p }} priority</option>{% endfor %}
+          </select>
+          <input type="date" name="due_date">
+        </div>
+        <button class="btn" type="submit">➕ Add task</button>
+      </form>
+
+      <div class="filters">
+        <div class="tabs">
+          <a class="tab {{ 'on' if flt == 'all' }}" href="/?filter=all&category={{ category }}&q={{ q }}&sort={{ sort }}">All</a>
+          <a class="tab {{ 'on' if flt == 'active' }}" href="/?filter=active&category={{ category }}&q={{ q }}&sort={{ sort }}">Active</a>
+          <a class="tab {{ 'on' if flt == 'completed' }}" href="/?filter=completed&category={{ category }}&q={{ q }}&sort={{ sort }}">Completed</a>
+        </div>
+        <form method="get" action="/">
+          <input type="hidden" name="filter" value="{{ flt }}">
+          <input type="search" name="q" value="{{ q }}" placeholder="🔍 Search tasks">
+          <select name="category" onchange="this.form.submit()">
+            <option value="">All categories</option>
+            {% for c in categories %}<option value="{{ c }}" {{ 'selected' if c == category }}>{{ c }}</option>{% endfor %}
+          </select>
+          <select name="sort" onchange="this.form.submit()">
+            <option value="newest" {{ 'selected' if sort == 'newest' }}>Newest</option>
+            <option value="priority" {{ 'selected' if sort == 'priority' }}>Priority</option>
+            <option value="due" {{ 'selected' if sort == 'due' }}>Due date</option>
+          </select>
+        </form>
+      </div>
+
+      <ul>
+        {% for t in tasks %}
+        {% set late = t.due_date and t.due_date < today and not t.done %}
+        <li class="task p-{{ t.priority|lower }}{{ ' done' if t.done }}{{ ' overdue' if late }}">
+          <div class="row">
+            <form class="inline" action="/done/{{ t.id }}" method="post">
+              <button class="check" title="Mark done / undo">{{ '✓' if t.done }}</button>
+            </form>
+            <div class="main">
+              <div class="title">{{ t.title }}</div>
+              <div class="chips">
+                <span class="chip cat-{{ t.category|lower }}">{{ t.category }}</span>
+                <span class="chip pr-{{ t.priority|lower }}">{{ t.priority }}</span>
+                {% if t.due_date %}<span class="chip due{{ ' late' if late }}">📅 {{ t.due_date }}{{ ' · overdue' if late }}</span>{% endif %}
+              </div>
+            </div>
+            <form class="inline" action="/delete/{{ t.id }}" method="post">
+              <button class="icon" title="Delete">🗑️</button>
+            </form>
+          </div>
+          <details>
+            <summary>✏️ Edit</summary>
+            <form class="edit" action="/edit/{{ t.id }}" method="post">
+              <input type="text" name="title" value="{{ t.title }}" maxlength="200" required>
+              <div class="row2">
+                <select name="category">
+                  {% for c in categories %}<option value="{{ c }}" {{ 'selected' if c == t.category }}>{{ c }}</option>{% endfor %}
+                </select>
+                <select name="priority">
+                  {% for p in priorities %}<option value="{{ p }}" {{ 'selected' if p == t.priority }}>{{ p }}</option>{% endfor %}
+                </select>
+                <input type="date" name="due_date" value="{{ t.due_date or '' }}">
+              </div>
+              <button class="btn" type="submit">Save changes</button>
+            </form>
+          </details>
+        </li>
+        {% else %}
+        <li class="empty">{{ 'No tasks yet. Add one above!' if total == 0 else 'No matching tasks.' }}</li>
+        {% endfor %}
+      </ul>
+
+      <footer>
+        <span>{{ active }} pending · {{ percent }}% complete</span>
+        {% if done %}
+        <form class="inline" action="/clear-completed" method="post">
+          <button class="btn danger" type="submit">Clear completed</button>
+        </form>
+        {% endif %}
+      </footer>
+    </main>
+  </div>
 </body>
 </html>
