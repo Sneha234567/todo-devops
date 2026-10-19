@@ -18,10 +18,10 @@ pipeline {
             }
         }
 
-        stage('Install & Test') {
+                stage('Install & Test') {
             steps {
                 bat '''
-                    python -m venv venv
+                    "C:\\Users\\sneha\\AppData\\Local\\Programs\\Python\\Python312\\python.exe" -m venv venv
                     venv\\Scripts\\pip install -r requirements.txt
                     venv\\Scripts\\python -m pytest -v
                 '''
